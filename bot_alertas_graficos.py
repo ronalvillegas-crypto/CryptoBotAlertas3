@@ -1,17 +1,9 @@
-from telegram import Bot
-
-API_TOKEN = "7901741145:AAFPr0wLmKVDkHV30_clU9eGcX8doi8mjQQ"
-CHAT_ID = "1347933429"
-
-bot = Bot(token=API_TOKEN)
-bot.send_message(chat_id=CHAT_ID, text="✅ Prueba enviada a Telegram correctamente.")
-
 import ccxt
 import pandas as pd
 import time
 import matplotlib.pyplot as plt
-from telegram import Bot
 from io import BytesIO
+from telegram import Bot, InputFile
 
 # ===== CONFIGURACIÓN =====
 API_TOKEN = "7901741145:AAFPr0wLmKVDkHV30_clU9eGcX8doi8mjQQ"
@@ -53,25 +45,25 @@ def detectar_niveles(df):
 
 def graficar_alerta(df, par, soporte, resistencia):
     """Genera gráfico de precio + RSI y devuelve imagen en memoria."""
-    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(8, 6), sharex=True, gridspec_kw={'height_ratios': [3, 1]})
+    fig, ax = plt.subplots(2, 1, figsize=(8, 6), sharex=True, gridspec_kw={'height_ratios': [3, 1]})
 
     # --- Gráfico de precios ---
-    ax1.plot(df['fecha'], df['close'], label='Precio', linewidth=1.8)
-    ax1.axhline(soporte, color='green', linestyle='--', label='Soporte')
-    ax1.axhline(resistencia, color='red', linestyle='--', label='Resistencia')
-    ax1.set_title(f"{par} - Precio con Soporte y Resistencia")
-    ax1.set_ylabel("Precio (USDT)")
-    ax1.legend()
-    ax1.grid(True, linestyle='--', alpha=0.4)
+    ax[0].plot(df['fecha'], df['close'], label='Precio', linewidth=1.8)
+    ax[0].axhline(soporte, color='green', linestyle='--', label='Soporte')
+    ax[0].axhline(resistencia, color='red', linestyle='--', label='Resistencia')
+    ax[0].set_title(f"{par} - Precio con Soporte y Resistencia")
+    ax[0].set_ylabel("Precio (USDT)")
+    ax[0].legend()
+    ax[0].grid(True, linestyle='--', alpha=0.4)
 
     # --- Gráfico RSI ---
-    ax2.plot(df['fecha'], df['rsi'], label='RSI', color='purple')
-    ax2.axhline(70, color='red', linestyle='--', linewidth=1)
-    ax2.axhline(30, color='green', linestyle='--', linewidth=1)
-    ax2.set_ylabel("RSI (14)")
-    ax2.set_xlabel("Tiempo")
-    ax2.grid(True, linestyle='--', alpha=0.4)
-    ax2.legend()
+    ax[1].plot(df['fecha'], df['rsi'], label='RSI', color='purple')
+    ax[1].axhline(70, color='red', linestyle='--', linewidth=1)
+    ax[1].axhline(30, color='green', linestyle='--', linewidth=1)
+    ax[1].set_ylabel("RSI (14)")
+    ax[1].set_xlabel("Tiempo")
+    ax[1].grid(True, linestyle='--', alpha=0.4)
+    ax[1].legend()
 
     plt.tight_layout()
 
@@ -82,22 +74,8 @@ def graficar_alerta(df, par, soporte, resistencia):
     plt.close(fig)
     return imagen
 
-
-# ===== PRUEBA INICIAL =====
-print("🤖 Bot avanzado con gráficos iniciado...\n")
-
-try:
-    df_test = obtener_datos("BTC/USDT", INTERVALO)
-    df_test = calcular_RSI(df_test)
-    soporte, resistencia = detectar_niveles(df_test)
-    imagen = graficar_alerta(df_test, "BTC/USDT", soporte, resistencia)
-    bot.send_photo(chat_id=CHAT_ID, photo=imagen, caption="📊 Prueba de gráfico automático")
-    print("✅ Prueba enviada a Telegram correctamente.\n")
-except Exception as e:
-    print("❌ Error en prueba inicial:", e)
-
-
 # ===== PROCESO PRINCIPAL =====
+print("🤖 Bot avanzado con gráficos iniciado...\n")
 ultimo_envio = {}
 
 while True:
@@ -110,7 +88,6 @@ while True:
             rsi = round(df['rsi'].iloc[-1], 2)
 
             mensaje = None
-
             if precio <= soporte and rsi < 35:
                 mensaje = f"🟢 {par}\nTocó SOPORTE en ${precio}\nRSI={rsi} (posible rebote)"
             elif precio >= resistencia and rsi > 65:
@@ -118,7 +95,7 @@ while True:
 
             if mensaje and ultimo_envio.get(par) != mensaje:
                 imagen = graficar_alerta(df, par, soporte, resistencia)
-                bot.send_photo(chat_id=CHAT_ID, photo=imagen, caption=mensaje)
+                bot.send_photo(chat_id=CHAT_ID, photo=InputFile(imagen, filename=f"{par}.png"), caption=mensaje)
                 ultimo_envio[par] = mensaje
 
             print(f"{par} | Precio: {precio} | RSI: {rsi} | Soporte: {soporte} | Resistencia: {resistencia}")
@@ -129,3 +106,5 @@ while True:
     except Exception as e:
         print("❌ Error:", e)
         time.sleep(60)
+
+
