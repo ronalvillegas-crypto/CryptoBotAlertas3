@@ -1,3 +1,11 @@
+from telegram import Bot
+
+API_TOKEN = "7901741145:AAFPr0wLmKVDkHV30_clU9eGcX8doi8mjQQ"
+CHAT_ID = "1347933429"
+
+bot = Bot(token=API_TOKEN)
+bot.send_message(chat_id=CHAT_ID, text="✅ Prueba enviada a Telegram correctamente.")
+
 import ccxt
 import pandas as pd
 import time

@@ -1,7 +1,4 @@
-python-telegram-bot==20.6
-ccxt==4.3.83
-matplotlib==3.9.2
-pandas==2.2.3
-numpy==1.26.4
-requests==2.32.3
-pillow==10.3.0
+ccxt
+pandas
+matplotlib
+python-telegram-bot==13.15
